@@ -115,4 +115,6 @@ destination_file = sys.argv[2].lower()
 
 
 converted_rows = read_input_file(input_file)
-write_destination_file(destination_file, converted_rows) 
+print "Conversion completed successfully."
+write_destination_file(destination_file, converted_rows)
+print "Destination file written at: " + destination_file 
