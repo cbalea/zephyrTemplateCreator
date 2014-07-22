@@ -21,9 +21,10 @@ def write_one_test(test, sheet, start_row):
     write_data_to_excel_sheet(sheet, start_row, 7, test["story_id"])
     
 #     print empty row
-    write_data_to_excel_sheet(sheet, end_row+1, 0, "")
+    end_row += 1
+    write_data_to_excel_sheet(sheet, end_row, 0, "")
     
-    return end_row+2
+    return end_row+1
 
 
 def write_sheet_header(sheet):
@@ -55,11 +56,11 @@ def strip_list(orig_list=[]):
     return new_list
 
 def convert_to_import_template(row_content, story_id, component=None):
-    steps = strip_list(re.split("\d+\.", row_content[8]))
+    steps = strip_list(re.split("\d+\.", row_content[7]))
     
     if len(steps) == 0:
         raise Exception("Test case <%s> contains no EXPECTED RESULT." %str(row_content[3]).strip())
-    elif row_content[5] == "":
+    elif row_content[4] == "":
         raise Exception("Test case <%s> has no defined PRIORITY." %str(row_content[3]).strip())
     
     results = []
@@ -67,14 +68,14 @@ def convert_to_import_template(row_content, story_id, component=None):
     for i in xrange(len(steps)):
         results.append("")
         test_data.append("")
-    results[-1] = row_content[7]
+    results[-1] = row_content[6]
     
-    return {"test_name":str(row_content[3]).strip(), 
-      "description":row_content[6].strip(), 
+    return {"test_name":str(row_content[5]).strip(), 
+      "description":row_content[5].strip(), 
       "steps":steps, 
       "results":results,
       "test_data":test_data, 
-      "priority":row_content[5].strip(), 
+      "priority":row_content[4].strip(), 
       "components":component.strip(), 
       "story_id":story_id.strip()}
 
@@ -82,7 +83,7 @@ def convert_to_import_template(row_content, story_id, component=None):
 
 def read_input_file(input_file):
     input_workbook = xlrd.open_workbook(input_file)
-    sheet = input_workbook.sheet_by_index(2)
+    sheet = input_workbook.sheet_by_index(0)
     
     rows_for_import_template = []
     start_row = 7
@@ -92,7 +93,7 @@ def read_input_file(input_file):
         if row_content[1]:
             story_id = row_content[1]
         if not is_empty_row(row_content):
-            converted_data = convert_to_import_template(row_content, story_id, "Android")
+            converted_data = convert_to_import_template(row_content, story_id, "Shanghai")
             rows_for_import_template.append(converted_data)
     return rows_for_import_template
 
