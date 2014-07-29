@@ -61,6 +61,7 @@ def convert_to_import_template(row_content, story_id, row_nb, component=None):
     steps_column = 7
     result_column = 6
     priority_column = 4
+    test_data_column = 0
     
     steps = strip_list(re.split("\d+\.", row_content[steps_column]))
     
@@ -74,6 +75,7 @@ def convert_to_import_template(row_content, story_id, row_nb, component=None):
     for i in xrange(len(steps)):
         results.append("")
         test_data.append("")
+    test_data[0] = row_content[test_data_column]
     results[-1] = row_content[result_column]
     
     try:
@@ -86,7 +88,7 @@ def convert_to_import_template(row_content, story_id, row_nb, component=None):
           "components":component.strip(), 
           "story_id":story_id.strip()}
     except Exception as e:
-        exception_title = "Row <%d> rasied exception: \n" %row_nb 
+        exception_title = "Row <%d> rasied exception: \n" %(row_nb+1) 
         raise Exception(exception_title + str(e))
 
 
