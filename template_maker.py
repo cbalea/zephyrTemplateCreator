@@ -102,7 +102,7 @@ def read_input_file(input_file):
     start_row = 1
     story_id_column = 6
     component_column = 0
-    general_component = "CTS_pack"
+    general_component = "CTS_pack_desktop"
     
     rows_for_import_template = []
     for row_nb in xrange(start_row, sheet.nrows):
