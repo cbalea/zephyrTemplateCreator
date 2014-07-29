@@ -102,6 +102,7 @@ def read_input_file(input_file):
     start_row = 1
     story_id_column = 6
     component_column = 0
+    general_component = "CTS_pack"
     
     rows_for_import_template = []
     for row_nb in xrange(start_row, sheet.nrows):
@@ -111,9 +112,9 @@ def read_input_file(input_file):
         else:
             story_id = ""
         if row_content[component_column]:
-            component = row_content[component_column]
+            component = row_content[component_column].lower().replace(" ", "_") + ", " + general_component
         else:
-            component = None
+            component = general_component
         if not is_empty_row(row_content):
             converted_data = convert_to_import_template(row_content, story_id, row_nb, component)
             rows_for_import_template.append(converted_data)
