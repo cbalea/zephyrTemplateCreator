@@ -56,19 +56,21 @@ def strip_list(orig_list=[]):
     return new_list
 
 def convert_to_import_template(row_content, story_id, row_nb, component=None):
-    test_name_column = 5
-    description_column = 5
-    steps_column = 7
-    result_column = 6
-    priority_column = 4
-    test_data_column = 0
+    test_name_column = 2
+    description_column = 2
+    steps_column = 4
+    result_column = 5
+    priority_column = 1
+    test_data_column = 3
     
     steps = strip_list(re.split("\d+\.", row_content[steps_column]))
     
     if len(steps) == 0:
-        raise Exception("Test case <%s> contains no EXPECTED RESULT." %str(row_content[test_name_column]).strip())
-    elif row_content[4] == "":
-        raise Exception("Test case <%s> has no defined PRIORITY." %str(row_content[test_name_column]).strip())
+        raise Exception("Row <%d> contains no STEPS." %(row_nb+1))
+    elif row_content[result_column] == "":
+        raise Exception("Row <%d> contains no EXPECTED RESULT." %(row_nb+1))
+    elif row_content[priority_column] == "":
+        raise Exception("Row <%d> has no defined PRIORITY." %(row_nb+1))
     
     results = []
     test_data = []
@@ -79,13 +81,13 @@ def convert_to_import_template(row_content, story_id, row_nb, component=None):
     results[-1] = row_content[result_column]
     
     try:
-        return {"test_name":str(row_content[test_name_column]).strip(), 
+        return {"test_name":u''.join(row_content[test_name_column]).encode('utf-8').strip(), 
           "description":row_content[description_column].strip(), 
           "steps":steps, 
           "results":results,
           "test_data":test_data, 
           "priority":row_content[priority_column].strip(), 
-          "components":component.strip(), 
+          "components":component, 
           "story_id":story_id.strip()}
     except Exception as e:
         exception_title = "Row <%d> rasied exception: \n" %(row_nb+1) 
@@ -98,15 +100,22 @@ def read_input_file(input_file):
     sheet = input_workbook.sheet_by_index(0)
 
     start_row = 1
-    story_id_column = 18
+    story_id_column = 6
+    component_column = 0
     
     rows_for_import_template = []
     for row_nb in xrange(start_row, sheet.nrows):
         row_content = [sheet.cell_value(row_nb, col) for col in range(sheet.ncols)]
-        if row_content[1]:
+        if row_content[story_id_column]:
             story_id = row_content[story_id_column]
+        else:
+            story_id = ""
+        if row_content[component_column]:
+            component = row_content[component_column]
+        else:
+            component = None
         if not is_empty_row(row_content):
-            converted_data = convert_to_import_template(row_content, story_id, row_nb, "OTSN")
+            converted_data = convert_to_import_template(row_content, story_id, row_nb, component)
             rows_for_import_template.append(converted_data)
     return rows_for_import_template
 
