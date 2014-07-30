@@ -56,12 +56,12 @@ def strip_list(orig_list=[]):
     return new_list
 
 def convert_to_import_template(row_content, story_id, row_nb, component=None):
-    test_name_column = 2
-    description_column = 2
-    steps_column = 4
+    test_name_column = 4
+    description_column = 4
+    steps_column = 6
     result_column = 5
-    priority_column = 1
-    test_data_column = 3
+    priority_column = 3
+    test_data_column = None
     
     steps = strip_list(re.split("\d+\.", row_content[steps_column]))
     
@@ -77,7 +77,8 @@ def convert_to_import_template(row_content, story_id, row_nb, component=None):
     for i in xrange(len(steps)):
         results.append("")
         test_data.append("")
-    test_data[0] = row_content[test_data_column]
+    if test_data_column:
+        test_data[0] = row_content[test_data_column]
     results[-1] = row_content[result_column]
     
     try:
@@ -97,21 +98,23 @@ def convert_to_import_template(row_content, story_id, row_nb, component=None):
 
 def read_input_file(input_file):
     input_workbook = xlrd.open_workbook(input_file)
-    sheet = input_workbook.sheet_by_index(0)
+    sheet = input_workbook.sheet_by_index(2)
 
     start_row = 1
-    story_id_column = 6
-    component_column = 0
-    general_component = "CTS_pack_desktop"
+    story_id_column = 0
+    component_column = None
+    general_component = "Android"
     
     rows_for_import_template = []
+    story_id = ""
     for row_nb in xrange(start_row, sheet.nrows):
         row_content = [sheet.cell_value(row_nb, col) for col in range(sheet.ncols)]
-        if row_content[story_id_column]:
+        if row_content[story_id_column] != "":
             story_id = row_content[story_id_column]
         else:
-            story_id = ""
-        if row_content[component_column]:
+            pass # when we have multiple tests/story and the story id is only printed once for the entire batch
+#             story_id = "" # when we have tests without stories
+        if component_column:
             component = row_content[component_column].lower().replace(" ", "_") + ", " + general_component
         else:
             component = general_component
