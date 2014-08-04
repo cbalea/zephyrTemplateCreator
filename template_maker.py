@@ -56,12 +56,13 @@ def strip_list(orig_list=[]):
     return new_list
 
 def convert_to_import_template(row_content, story_id, row_nb, component=None):
-    test_name_column = 4
-    description_column = 4
-    steps_column = 6
-    result_column = 5
-    priority_column = 3
+    test_name_column = 7
+    description_column = 7
+    steps_column = 9
+    result_column = 8
+    priority_column = 6
     test_data_column = None
+    deprecated_column = 3
     
     steps = strip_list(re.split("\d+\.", row_content[steps_column]))
     
@@ -80,6 +81,8 @@ def convert_to_import_template(row_content, story_id, row_nb, component=None):
     if test_data_column:
         test_data[0] = row_content[test_data_column]
     results[-1] = row_content[result_column]
+    if row_content[deprecated_column]:
+        component += ", deprecated"
     
     try:
         return {"test_name":u''.join(row_content[test_name_column]).encode('utf-8').strip(), 
@@ -97,13 +100,15 @@ def convert_to_import_template(row_content, story_id, row_nb, component=None):
 
 
 def read_input_file(input_file):
-    input_workbook = xlrd.open_workbook(input_file)
-    sheet = input_workbook.sheet_by_index(2)
-
-    start_row = 1
-    story_id_column = 0
+    test_cases_sheet = 2
+    start_row = 7
+    story_id_column = 1
+    test_name_column = 7
     component_column = None
     general_component = "Android"
+
+    input_workbook = xlrd.open_workbook(input_file)
+    sheet = input_workbook.sheet_by_index(test_cases_sheet)
     
     rows_for_import_template = []
     story_id = ""
@@ -121,6 +126,8 @@ def read_input_file(input_file):
         if not is_empty_row(row_content):
             converted_data = convert_to_import_template(row_content, story_id, row_nb, component)
             rows_for_import_template.append(converted_data)
+        if '\n' in row_content[test_name_column]:
+            row_content = row_content.replace('\n', " ")
     return rows_for_import_template
 
 
