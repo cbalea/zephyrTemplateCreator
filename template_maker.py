@@ -48,23 +48,31 @@ def is_empty_row(data):
             is_empty_row = False
     return is_empty_row
 
-def strip_list(orig_list=[]):
+def strip_list(orig_list, element_to_remove=None):
     new_list = []
     for element in orig_list:
         if element != "":
-            new_list.append(element.strip())
+            if element_to_remove:
+                if element_to_remove not in element:
+                    new_list.append(element.strip())
+            else:
+                new_list.append(element.strip())
     return new_list
 
-def convert_to_import_template(row_content, story_id, row_nb, component=None):
-    test_name_column = 7
-    description_column = 7
-    steps_column = 9
-    result_column = 8
-    priority_column = 6
-    test_data_column = None
-    deprecated_column = 3
+def convert_to_import_template(row_content, story_id, row_nb, labels=None):
+    test_name_column = 4
+    description_column = 4
+    steps_column = 6
+    result_column = 7
+    priority_column = 3
+    test_data_column = 5
+    deprecated_column = None
     
-    steps = strip_list(re.split("\d+\.", row_content[steps_column]))
+    res = re.split("\d+\.", row_content[result_column])
+    row_content[result_column] = strip_list(res, "URL should be launched successfully")
+    
+    stps = re.split("\d+\.", row_content[steps_column])
+    steps = strip_list(stps)
     
     if len(steps) == 0:
         raise Exception("Row <%d> contains no STEPS." %(row_nb+1))
@@ -81,8 +89,8 @@ def convert_to_import_template(row_content, story_id, row_nb, component=None):
     if test_data_column:
         test_data[0] = row_content[test_data_column]
     results[-1] = row_content[result_column]
-    if row_content[deprecated_column]:
-        component += ", deprecated"
+    if deprecated_column and row_content[deprecated_column]:
+        labels += ", deprecated"
     
     try:
         return {"test_name":u''.join(row_content[test_name_column]).encode('utf-8').strip(), 
@@ -91,7 +99,7 @@ def convert_to_import_template(row_content, story_id, row_nb, component=None):
           "results":results,
           "test_data":test_data, 
           "priority":row_content[priority_column].strip(), 
-          "components":component, 
+          "components":labels, 
           "story_id":story_id.strip()}
     except Exception as e:
         exception_title = "Row <%d> rasied exception: \n" %(row_nb+1) 
@@ -100,12 +108,12 @@ def convert_to_import_template(row_content, story_id, row_nb, component=None):
 
 
 def read_input_file(input_file):
-    test_cases_sheet = 2
-    start_row = 7
-    story_id_column = 1
-    test_name_column = 7
-    component_column = None
-    general_component = "Android"
+    test_cases_sheet = 0
+    start_row = 1
+    story_id_column = None
+    test_name_column = 4
+    labels_column = 2
+    general_label = "cts_desktop"
 
     input_workbook = xlrd.open_workbook(input_file)
     sheet = input_workbook.sheet_by_index(test_cases_sheet)
@@ -114,20 +122,20 @@ def read_input_file(input_file):
     story_id = ""
     for row_nb in xrange(start_row, sheet.nrows):
         row_content = [sheet.cell_value(row_nb, col) for col in range(sheet.ncols)]
-        if row_content[story_id_column] != "":
+        if story_id_column and row_content[story_id_column] != "":
             story_id = row_content[story_id_column]
         else:
             pass # when we have multiple tests/story and the story id is only printed once for the entire batch
 #             story_id = "" # when we have tests without stories
-        if component_column:
-            component = row_content[component_column].lower().replace(" ", "_") + ", " + general_component
+        if labels_column:
+            label = row_content[labels_column].lower().replace(" ", "_") + ", " + general_label
         else:
-            component = general_component
+            label = general_label
         if not is_empty_row(row_content):
-            converted_data = convert_to_import_template(row_content, story_id, row_nb, component)
+            converted_data = convert_to_import_template(row_content, story_id, row_nb, label)
             rows_for_import_template.append(converted_data)
         if '\n' in row_content[test_name_column]:
-            row_content = row_content.replace('\n', " ")
+            row_content[test_name_column] = row_content[test_name_column].replace('\n', " ")
     return rows_for_import_template
 
 
