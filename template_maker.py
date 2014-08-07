@@ -17,7 +17,7 @@ def write_one_test(test, sheet, start_row):
     end_row = start_row + step
     
     write_data_to_excel_sheet(sheet, start_row, 5, test["priority"])
-    write_data_to_excel_sheet(sheet, start_row, 6, test["components"])
+    write_data_to_excel_sheet(sheet, start_row, 6, test["labels"])
     write_data_to_excel_sheet(sheet, start_row, 7, test["story_id"])
     
 #     print empty row
@@ -34,7 +34,7 @@ def write_sheet_header(sheet):
     write_data_to_excel_sheet(sheet, 0, 3, "Results")
     write_data_to_excel_sheet(sheet, 0, 4, "Test data")
     write_data_to_excel_sheet(sheet, 0, 5, "Priority")
-    write_data_to_excel_sheet(sheet, 0, 6, "Component")
+    write_data_to_excel_sheet(sheet, 0, 6, "Labels")
     write_data_to_excel_sheet(sheet, 0, 7, "Story ID")
 
 
@@ -60,12 +60,12 @@ def strip_list(orig_list, element_to_remove=None):
     return new_list
 
 def convert_to_import_template(row_content, story_id, row_nb, labels=None):
-    test_name_column = 4
-    description_column = 4
-    steps_column = 6
+    test_name_column = 6
+    description_column = 6
+    steps_column = 8
     result_column = 7
-    priority_column = 3
-    test_data_column = 5
+    priority_column = 5
+    test_data_column = None
     deprecated_column = None
     
     res = re.split("\d+\.", row_content[result_column])
@@ -99,7 +99,7 @@ def convert_to_import_template(row_content, story_id, row_nb, labels=None):
           "results":results,
           "test_data":test_data, 
           "priority":row_content[priority_column].strip(), 
-          "components":labels, 
+          "labels":labels, 
           "story_id":story_id.strip()}
     except Exception as e:
         exception_title = "Row <%d> rasied exception: \n" %(row_nb+1) 
@@ -109,11 +109,11 @@ def convert_to_import_template(row_content, story_id, row_nb, labels=None):
 
 def read_input_file(input_file):
     test_cases_sheet = 0
-    start_row = 1
-    story_id_column = None
-    test_name_column = 4
-    labels_column = 2
-    general_label = "cts_desktop"
+    start_row = 7
+    story_id_column = 2
+    test_name_column = 6
+    labels_column = 1
+    general_label = "escenic_desktop"
 
     input_workbook = xlrd.open_workbook(input_file)
     sheet = input_workbook.sheet_by_index(test_cases_sheet)
