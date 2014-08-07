@@ -60,12 +60,12 @@ def strip_list(orig_list, element_to_remove=None):
     return new_list
 
 def convert_to_import_template(row_content, story_id, row_nb, labels=None):
-    test_name_column = 6
-    description_column = 6
-    steps_column = 8
+    test_name_column = 2
+    description_column = 3
+    steps_column = 9
     result_column = 7
     priority_column = 5
-    test_data_column = None
+    test_data_column = 8
     deprecated_column = None
     
     res = re.split("\d+\.", row_content[result_column])
@@ -109,11 +109,11 @@ def convert_to_import_template(row_content, story_id, row_nb, labels=None):
 
 def read_input_file(input_file):
     test_cases_sheet = 0
-    start_row = 7
-    story_id_column = 2
-    test_name_column = 6
-    labels_column = 1
-    general_label = "escenic_desktop"
+    start_row = 9
+    story_id_column = 1
+    test_name_column = 2
+    labels_column = None
+    general_label = "bastion"
 
     input_workbook = xlrd.open_workbook(input_file)
     sheet = input_workbook.sheet_by_index(test_cases_sheet)
