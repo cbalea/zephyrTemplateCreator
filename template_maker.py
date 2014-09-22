@@ -19,6 +19,7 @@ def write_one_test(test, sheet, start_row):
     write_data_to_excel_sheet(sheet, start_row, 5, test["priority"])
     write_data_to_excel_sheet(sheet, start_row, 6, test["labels"])
     write_data_to_excel_sheet(sheet, start_row, 7, test["story_id"])
+    write_data_to_excel_sheet(sheet, start_row, 8, test["components"])
     
 #     print empty row
 #     end_row += 1
@@ -36,6 +37,7 @@ def write_sheet_header(sheet):
     write_data_to_excel_sheet(sheet, 0, 5, "Priority")
     write_data_to_excel_sheet(sheet, 0, 6, "Labels")
     write_data_to_excel_sheet(sheet, 0, 7, "Story ID")
+    write_data_to_excel_sheet(sheet, 0, 8, "Components")
 
 
 def write_data_to_excel_sheet(sheet, row, column, data):
@@ -61,12 +63,13 @@ def strip_list(orig_list, element_to_remove=None):
 
 def convert_to_import_template(row_content, story_id, row_nb, labels=None):
     test_name_column = 2
-    description_column = 3
-    steps_column = 9
-    result_column = 7
+    description_column = 2
+    steps_column = 3
+    result_column = 4
     priority_column = 5
-    test_data_column = 8
+    test_data_column = None
     deprecated_column = None
+    components_column = 6
     
     res = re.split("\d+\.", row_content[result_column])
     row_content[result_column] = strip_list(res, "URL should be launched successfully")
@@ -92,6 +95,10 @@ def convert_to_import_template(row_content, story_id, row_nb, labels=None):
     if deprecated_column and row_content[deprecated_column]:
         labels += ", deprecated"
     
+    if components_column:
+        components = ""
+        components = row_content[components_column].replace(", ", ",")
+    
     try:
         return {"test_name":u''.join(row_content[test_name_column]).encode('utf-8').strip(), 
           "description":row_content[description_column].strip(), 
@@ -100,7 +107,8 @@ def convert_to_import_template(row_content, story_id, row_nb, labels=None):
           "test_data":test_data, 
           "priority":row_content[priority_column].strip(), 
           "labels":labels, 
-          "story_id":story_id.strip()}
+          "story_id":story_id.strip()
+          ,"components": components}
     except Exception as e:
         exception_title = "Row <%d> rasied exception: \n" %(row_nb+1) 
         raise Exception(exception_title + str(e))
@@ -108,12 +116,12 @@ def convert_to_import_template(row_content, story_id, row_nb, labels=None):
 
 
 def read_input_file(input_file):
-    test_cases_sheet = 0
-    start_row = 9
-    story_id_column = 1
+    test_cases_sheet = 3
+    start_row = 6
+    story_id_column = None
     test_name_column = 2
-    labels_column = None
-    general_label = "bastion"
+    labels_column = 1
+    general_label = None
 
     input_workbook = xlrd.open_workbook(input_file)
     sheet = input_workbook.sheet_by_index(test_cases_sheet)
@@ -128,7 +136,13 @@ def read_input_file(input_file):
             pass # when we have multiple tests/story and the story id is only printed once for the entire batch
 #             story_id = "" # when we have tests without stories
         if labels_column:
-            label = row_content[labels_column].lower().replace(" ", "_") + ", " + general_label
+            try:
+                label = row_content[labels_column].lower().replace(" ", "_")
+                if general_label:
+                    label+= ", " + general_label
+            except Exception as e:
+                exception_title = "Row <%d> rasied exception: \n" %(row_nb+1) 
+                raise Exception(exception_title + str(e))
         else:
             label = general_label
         if not is_empty_row(row_content):
