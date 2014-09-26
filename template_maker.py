@@ -62,17 +62,17 @@ def strip_list(orig_list, element_to_remove=None):
     return new_list
 
 def convert_to_import_template(row_content, story_id, row_nb, labels=None):
-    test_name_column = 2
-    description_column = 2
-    steps_column = 3
-    result_column = 4
-    priority_column = 5
-    test_data_column = None
+    test_name_column = 4
+    description_column = 4
+    steps_column = 6
+    result_column = 7
+    priority_column = 2
+    test_data_column = 5
     deprecated_column = None
-    components_column = 6
+    components_column = None
     
     res = re.split("\d+\.", row_content[result_column])
-    row_content[result_column] = strip_list(res, "URL should be launched successfully")
+    row_content[result_column] = strip_list(res)
     
     stps = re.split("\d+\.", row_content[steps_column])
     steps = strip_list(stps)
@@ -91,12 +91,25 @@ def convert_to_import_template(row_content, story_id, row_nb, labels=None):
         test_data.append("")
     if test_data_column:
         test_data[0] = row_content[test_data_column]
-    results[-1] = row_content[result_column]
+    
+#     nb_of_results = len(row_content[result_column])
+#     try:
+#         for i in xrange(nb_of_results):
+#             results[-(i+1)] = row_content[result_column][nb_of_results-1-i]
+#     except Exception as e:
+#         exception_title = "Row <%d> rasied exception: \n" %(row_nb+1) 
+#         raise Exception(exception_title + str(e))   
+        
+    for result in row_content[result_column]:
+        results[-1] += result + ".\n"
+    
+    
+    
     if deprecated_column and row_content[deprecated_column]:
         labels += ", deprecated"
     
+    components = "Escenic 5.3"
     if components_column:
-        components = ""
         components = row_content[components_column].replace(", ", ",")
     
     try:
@@ -116,12 +129,12 @@ def convert_to_import_template(row_content, story_id, row_nb, labels=None):
 
 
 def read_input_file(input_file):
-    test_cases_sheet = 3
-    start_row = 6
+    test_cases_sheet = 1
+    start_row = 1
     story_id_column = None
-    test_name_column = 2
-    labels_column = 1
-    general_label = None
+    test_name_column = 4
+    labels_column = 3
+    general_label = "escenic5.3, escenic_desktop, travel"
 
     input_workbook = xlrd.open_workbook(input_file)
     sheet = input_workbook.sheet_by_index(test_cases_sheet)
