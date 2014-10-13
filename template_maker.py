@@ -61,13 +61,20 @@ def strip_list(orig_list, element_to_remove=None):
                 new_list.append(element.strip())
     return new_list
 
-def convert_to_import_template(row_content, story_id, row_nb, labels=None):
-    test_name_column = 4
+def preappend_list(preappender, list):
+    final_list = []
+    final_list.append(preappender)
+    for element in list:
+        final_list.append(element)
+    return final_list
+
+def convert_to_import_template(row_content, story_id, row_nb, labels, preconditions_column=None):
+    test_name_column = 3
     description_column = 4
-    steps_column = 6
-    result_column = 7
-    priority_column = 2
-    test_data_column = 5
+    steps_column = 5
+    result_column = 6
+    priority_column = 7
+    test_data_column = None
     deprecated_column = None
     components_column = None
     
@@ -76,6 +83,9 @@ def convert_to_import_template(row_content, story_id, row_nb, labels=None):
     
     stps = re.split("\d+\.", row_content[steps_column])
     steps = strip_list(stps)
+
+    if preconditions_column and row_content[preconditions_column]!="":
+        steps = preappend_list("PREREQUISITE: " + row_content[preconditions_column], steps)
     
     if len(steps) == 0:
         raise Exception("Row <%d> contains no STEPS." %(row_nb+1))
@@ -91,14 +101,8 @@ def convert_to_import_template(row_content, story_id, row_nb, labels=None):
         test_data.append("")
     if test_data_column:
         test_data[0] = row_content[test_data_column]
+        
     
-#     nb_of_results = len(row_content[result_column])
-#     try:
-#         for i in xrange(nb_of_results):
-#             results[-(i+1)] = row_content[result_column][nb_of_results-1-i]
-#     except Exception as e:
-#         exception_title = "Row <%d> rasied exception: \n" %(row_nb+1) 
-#         raise Exception(exception_title + str(e))   
         
     for result in row_content[result_column]:
         results[-1] += result + ".\n"
@@ -108,7 +112,7 @@ def convert_to_import_template(row_content, story_id, row_nb, labels=None):
     if deprecated_column and row_content[deprecated_column]:
         labels += ", deprecated"
     
-    components = "Escenic 5.3"
+    components = ""
     if components_column:
         components = row_content[components_column].replace(", ", ",")
     
@@ -129,12 +133,13 @@ def convert_to_import_template(row_content, story_id, row_nb, labels=None):
 
 
 def read_input_file(input_file):
-    test_cases_sheet = 1
-    start_row = 1
+    test_cases_sheet = 0
+    start_row = 2
     story_id_column = None
-    test_name_column = 4
-    labels_column = 3
-    general_label = "escenic5.3, escenic_desktop, travel"
+    test_name_column = 3
+    labels_column = None
+    preconditions_column = 4
+    general_label = "backend_services, webtrends"
 
     input_workbook = xlrd.open_workbook(input_file)
     sheet = input_workbook.sheet_by_index(test_cases_sheet)
@@ -159,7 +164,7 @@ def read_input_file(input_file):
         else:
             label = general_label
         if not is_empty_row(row_content):
-            converted_data = convert_to_import_template(row_content, story_id, row_nb, label)
+            converted_data = convert_to_import_template(row_content, story_id, row_nb, label, preconditions_column)
             rows_for_import_template.append(converted_data)
         if '\n' in row_content[test_name_column]:
             row_content[test_name_column] = row_content[test_name_column].replace('\n', " ")
